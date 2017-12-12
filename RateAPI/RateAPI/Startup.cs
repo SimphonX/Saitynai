@@ -36,6 +36,16 @@ namespace RateAPI
                     // name of the API resource
                     options.Audience = "api1";
                 });
+            services.AddCors(options =>
+            {
+                // this defines a CORS policy called "default"
+                options.AddPolicy("default", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5002")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
             services.AddMvc();
         }
 
@@ -49,6 +59,8 @@ namespace RateAPI
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseCors("default");
+
             app.UseAuthentication();
             app.UseMvc(routes =>
             {

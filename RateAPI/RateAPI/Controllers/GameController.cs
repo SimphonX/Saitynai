@@ -17,9 +17,12 @@ namespace RateMeAPI.Controllers
     //[Authorize]
     public class GameController : Controller
     {
-        private readonly string Urls = "https://api-2445582011268.apicast.io/";
-        private string key = "90237340f896bd6d566b94ac30ee30aa";
+        private readonly string Urls = "https://api-2445582011268.apicast.io";
+        private string key = "42880a8f8ab7e2ba73141e0522b3dd87";
         private readonly RateMeContext _context;
+        private int x_count = 0;
+        private string next_page ="";
+        private Boolean isList = false;
         public GameController(RateMeContext context)
         {
             _context = context;
@@ -34,6 +37,14 @@ namespace RateMeAPI.Controllers
                 client.DefaultRequestHeaders.Add("user-key", key);
                 using (HttpResponseMessage response = client.GetAsync(URL).Result)
                 {
+                    try
+                    {
+                        x_count = Int32.Parse(response.Headers.GetValues("x-count").ToArray()[0]);
+                        next_page = response.Headers.GetValues("x-next-page").ToArray()[0];
+                    }
+                    catch (Exception e) { }
+
+
                     using (HttpContent content = response.Content)
                     {
                         return content.ReadAsStringAsync().Result;
@@ -41,85 +52,57 @@ namespace RateMeAPI.Controllers
                 }
             }
         }
-        private IGDBGame[] Builder(string url)
+        
+        private IGDBGame[] IGDBCallId(int id, string type)
         {
-            IGDBGame[] games = JsonConvert.DeserializeObject<IGDBGame[]>(Json(url));
-            string str;
-            foreach (IGDBGame game in games)
+            string fields = "";
+            if(type == "list")
             {
-                str = Urls + "game_modes/";
-                foreach (int sk in game.Game_modes)
-                    str += sk.ToString()+',';
-                Game_Mode[] mode = JsonConvert.DeserializeObject<Game_Mode[]>(Json(str.Substring(0, str.Length - 1)));
-                game.GameModes = mode;
-                /*str = Urls + "keywords/";
-                foreach (int sk in game.Keywords)
-                    str += sk.ToString()+',';
-                Keywords[] key = JsonConvert.DeserializeObject<Keywords[]>(Json(str.Substring(0, str.Length-1)));
-                game.Keyword = key;
-                str = Urls + "themes/";
-                foreach (int sk in game.Themes)
-                    str += sk.ToString() + ',';
-                Themes[] theme = JsonConvert.DeserializeObject<Themes[]>(Json(str.Substring(0, str.Length - 1)));
-                game.Theme = theme;
-                */str = Urls + "genres/";
-                foreach (int sk in game.Genres)
-                    str += sk.ToString() + ',';
-                Genres[] genre = JsonConvert.DeserializeObject<Genres[]>(Json(str.Substring(0, str.Length - 1)));
-                game.Genre = genre;
-                str = Urls + "companies/";
-                foreach (int sk in game.Developers)
-                    str += sk.ToString() + ',';
-                Developers[] dev = JsonConvert.DeserializeObject<Developers[]>(Json(str.Substring(0, str.Length - 1)));
-                game.Developer = dev;
-                str = Urls + "companies/";
-                foreach (int sk in game.Publishers)
-                    str += sk.ToString() + ',';
-                Publishers[] pub = JsonConvert.DeserializeObject<Publishers[]>(Json(str.Substring(0, str.Length - 1)));
-                game.Publisher = pub;
-                foreach(Release_dates data in game.Release_dates)
-                {
-                    str = Urls + "platforms/" + data.Platform;
-                    Platform[] plat = JsonConvert.DeserializeObject<Platform[]>(Json(str));
-                    data.Platforms = plat[0].name;
-                }
+                fields += "?fields=id,name,summary,rating,total_rating,developers,publishers,category,cover,pegi,genres.name&expand=developers,publishers,platforms,genres";
             }
-            return games;
+            else {
+                fields += "?fields=id,name,summary,storyline,rating,total_rating,games,developers,publishers,game_engines,category,release_dates,screenshots,cover,pegi,player_perspectives.name,game_modes.name,keywords.name,themes.name,genres.name&expand=developers,publishers,game_engines,platforms,player_perspectives,game_modes,keywords,themes,genres";
+            }
+            return JsonConvert.DeserializeObject<IGDBGame[]>(Json(Urls + "/games/" + id.ToString()+fields));
         }
-        private IGDBGame[] IGDBCallId(int id)
+        private GamesID[] IGDBCallName(string name)
         {
-            return Builder(Urls + "games/" + id.ToString());
-            
-        }
-        private IGDBGame[] IGDBCallName(string name)
-        {
-
-            GamesID[] list = JsonConvert.DeserializeObject<GamesID[]>(Json(Urls + "games/?search=" + name));
-            List<IGDBGame> games = new List<IGDBGame>();
+            GamesID[] list = JsonConvert.DeserializeObject<GamesID[]>(Json(Urls + "/games/?search=" + name+ "&order=rating:desc,release_dates.date:desc&limit=20&scroll=1"));
+            /*List<IGDBGame> games = new List<IGDBGame>();
             foreach(GamesID sk in list)
             {
                 games.Add(IGDBCallId(sk.Id)[0]);
-            }
-            return games.ToArray();
+            }*/
+            return list.ToArray();
         }
 
         [HttpGet]
-        public IEnumerable<IGDBGame> Get()
+        public IEnumerable<GamesID> Get()
         {
-            Games[] game = _context.Games.ToArray();
-            DateTime baseDate = new DateTime(1970, 1, 1);
-            TimeSpan diff = DateTime.Now - baseDate;
-            Console.WriteLine(Math.Floor(diff.TotalMilliseconds));
-            List<IGDBGame> games = IGDBCallName("&order=date:asc").ToList<IGDBGame>();
-            foreach (Games g in game)
-                games.Add(IGDBCallId(g.Id)[0]);
-            return games;
+            GamesID[] data = IGDBCallName("");
+            Request.HttpContext.Response.Headers.Add("size", x_count.ToString());
+            Request.HttpContext.Response.Headers.Add("nextpage", next_page);
+            Request.HttpContext.Response.Headers.Add("Access-Control-Expose-Headers", "size, nextpage");
+            return data;
+            //return games.ToArray();
         }
 
         [HttpGet("GetByName")]
         public IActionResult GetName(string name)
         {
-            IGDBGame[] IGDBGame = IGDBCallName(name);
+            GamesID[] IGDBGame = IGDBCallName(name);
+
+            if (IGDBGame == null)
+            {
+                return NotFound();
+            }
+
+            return new ObjectResult(IGDBGame);
+        }
+        [HttpGet("NextPage")]
+        public IActionResult NextPage()
+        {
+            GamesID[] IGDBGame = JsonConvert.DeserializeObject<GamesID[]>(Json(Urls + Request.Headers["key"]));
 
             if (IGDBGame == null)
             {
@@ -132,7 +115,7 @@ namespace RateMeAPI.Controllers
         [HttpGet("{id}", Name = "GetGame")]
         public IActionResult GetByid(int id)
         {
-            IGDBGame[] IGDBGame = IGDBCallId(id);
+            IGDBGame[] IGDBGame = IGDBCallId(id, Request.Headers["type"]);
             
             if(IGDBGame == null)
             {

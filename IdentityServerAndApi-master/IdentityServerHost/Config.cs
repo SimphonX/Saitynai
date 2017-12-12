@@ -29,7 +29,7 @@ namespace IdentityServerHost
             },
             new Client
             {
-                ClientId = "postman-api",
+                ClientId = "client",
                 ClientSecrets = new List<Secret> {new Secret(CLIENT_SECRET.Sha256()) },
                 AllowedGrantTypes = 
                 {
@@ -43,10 +43,29 @@ namespace IdentityServerHost
                 AllowOfflineAccess = true,
 
                 RedirectUris = { "https://www.getpostman.com/oauth2/callback" },
-                PostLogoutRedirectUris = {"https://www.getpostman.com" },
-                AllowedCorsOrigins={ "https://www.getpostman.com" },
+                PostLogoutRedirectUris = {"http://localhost:5002" },
+                AllowedCorsOrigins={ "http://localhost:5002" },
                 AllowedScopes = { "openid", "profile", "email", API },
             },
+            /*new Client
+            {
+                ClientId = "client",
+                ClientSecrets = new List<Secret> {new Secret(CLIENT_SECRET.Sha256()) },
+                AllowedGrantTypes =
+                {
+                    GrantType.ResourceOwnerPassword,
+                    GrantType.Hybrid,
+                    "my_custom_grant_type"
+                },
+                RequireConsent = false,
+                EnableLocalLogin = true,
+                AllowAccessTokensViaBrowser = true,
+                AllowOfflineAccess = true,
+                
+                PostLogoutRedirectUris = {"http://localhost:5002/" },
+                AllowedCorsOrigins={ "http://localhost:5002" },
+                AllowedScopes = { "openid", "profile", "email", API },
+            }*/
         };
 
         public static IEnumerable<IdentityResource> IdentityResources = new List<IdentityResource>

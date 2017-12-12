@@ -12,7 +12,7 @@ using RateAPI.Model;
 namespace RateAPI.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize]
+    
     public class CommentController : Controller
     {
         private readonly RateMeContext _context;
@@ -22,9 +22,18 @@ namespace RateAPI.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<Comments> Get()
+        public IActionResult Get()
         {
-            return _context.Comments.ToList();
+            if(!Request.Headers.ContainsKey("game"))
+                return new ObjectResult(_context.Comments.ToList());
+            string game = Request.Headers["game"];
+            var item = _context.Comments.ToList().Where(t => t.Game == Int32.Parse(game));
+
+            if (item == null)
+            {
+                return NotFound();
+            }
+            return new ObjectResult(item);
         }
 
         [HttpGet("{id}", Name = "GetComments")]
@@ -51,9 +60,9 @@ namespace RateAPI.Controllers
             return new ObjectResult(sk/item.Count());
         }
         [HttpGet("GetUserName")]
-        public IActionResult GetUser(int id)
+        public IActionResult GetUser(string id)
         {
-            Users item = _context.Users.First<Users>(t => t.Id == id);
+            Users item = _context.Users.First<Users>(t => t.Username == id);
             if (item == null)
             {
                 return NotFound();
@@ -62,6 +71,7 @@ namespace RateAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public IActionResult Post([FromBody]Comments value)
         {
             if (value == null)
@@ -70,10 +80,11 @@ namespace RateAPI.Controllers
             }
             _context.Comments.Add(value);
             _context.SaveChanges();
-            return CreatedAtRoute("GetComment", new { id = value.Id }, value);
+            return new NoContentResult();
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public IActionResult Put(int id, [FromBody]Comments item)
         {
             if (item == null || item.Id != id)
@@ -93,6 +104,7 @@ namespace RateAPI.Controllers
             return new NoContentResult();
         }
         [HttpPut("inc")]
+        [Authorize]
         public IActionResult Inc(string id)
         {
             var comments = _context.Comments.FirstOrDefault(t => t.Id == int.Parse(id));
@@ -105,9 +117,10 @@ namespace RateAPI.Controllers
 
             _context.Comments.Update(comments);
             _context.SaveChanges();
-            return new NoContentResult();
+            return new ObjectResult(comments.Score);
         }
         [HttpPut("dec")]
+        [Authorize]
         public IActionResult dec(string id)
         {
             var comments = _context.Comments.FirstOrDefault(t => t.Id == int.Parse(id));
@@ -120,10 +133,11 @@ namespace RateAPI.Controllers
 
             _context.Comments.Update(comments);
             _context.SaveChanges();
-            return new NoContentResult();
+            return new ObjectResult(comments.Score);
         }
 
         [HttpDelete("{id}")]
+        [Authorize]
         public IActionResult Delete(int id)
         {
             var comments = _context.Comments.FirstOrDefault(t => t.Id == id);

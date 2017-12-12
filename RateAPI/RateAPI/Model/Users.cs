@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace RateAPI.Model
 {
     public partial class Users
     {
-        public Users()
-        {
-            Followings = new HashSet<Followings>();
-        }
 
-        public int Id { get; set; }
+        [Key]
         public string Username { get; set; }
         public string UserPass { get; set; }
-
-        public ICollection<Followings> Followings { get; set; }
+        
     }
 }

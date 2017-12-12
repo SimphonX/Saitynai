@@ -46,7 +46,7 @@ namespace RateAPI.Model
 
                 entity.Property(e => e.Commenter)
                     .HasColumnName("commenter")
-                    .HasColumnType("int(11)");
+                    .HasMaxLength(255);
 
                 entity.Property(e => e.Game)
                     .HasColumnName("game")
@@ -65,11 +65,7 @@ namespace RateAPI.Model
                     .HasColumnName("text")
                     .HasColumnType("text");
 
-                entity.HasOne(d => d.GameNavigation)
-                    .WithMany(p => p.Comments)
-                    .HasForeignKey(d => d.Game)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("comments_ibfk_1");
+                
             });
 
             modelBuilder.Entity<Followings>(entity =>
@@ -89,23 +85,12 @@ namespace RateAPI.Model
 
                 entity.Property(e => e.Follower)
                     .HasColumnName("follower")
-                    .HasColumnType("int(11)");
+                    .HasMaxLength(255);
 
                 entity.Property(e => e.Game)
                     .HasColumnName("game")
                     .HasColumnType("int(11)");
-
-                entity.HasOne(d => d.FollowerNavigation)
-                    .WithMany(p => p.Followings)
-                    .HasForeignKey(d => d.Follower)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("followings_ibfk_2");
-
-                entity.HasOne(d => d.GameNavigation)
-                    .WithMany(p => p.Followings)
-                    .HasForeignKey(d => d.Game)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("followings_ibfk_1");
+                
             });
 
             modelBuilder.Entity<Games>(entity =>
@@ -121,11 +106,6 @@ namespace RateAPI.Model
             modelBuilder.Entity<Users>(entity =>
             {
                 entity.ToTable("users");
-
-                entity.Property(e => e.Id)
-                    .HasColumnName("id")
-                    .HasColumnType("int(11)")
-                    .ValueGeneratedNever();
 
                 entity.Property(e => e.UserPass)
                     .IsRequired()

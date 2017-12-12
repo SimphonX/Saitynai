@@ -12,25 +12,32 @@ namespace RateAPI.Model
         public Int64 Id { get; set; }
         public string Name { get; set; }
         public string Summary { get; set; } = "";
+        public string Storyline { get; set; } = "";
         public double Rating { get; set; } = 0;
-        public double Aggregated_rating { get; set; } = 0;
         public double Total_rating { get; set; } = 0;
-        public int Category { get; set; } = 0;
+        private int Category { set; get; }
         public string Cate { get => Categorys[Category]; }
-        public int[] Game_modes { get; set; } = { };
-        //private int[] Keywords { get; set; } = { };
-        //private int[] Themes { get; set; } = { };
+        /*public int[] Game_modes { get; set; } = { };
+        private int[] Keywords { get; set; } = { };
+        private int[] Themes { get; set; } = { };
         public int[] Genres { get; set; } = { };
         public int[] Developers { get; set; } = { };
-        public int[] Publishers { get; set; } = { };
-        //public double Popularity { get; set; } = 0;
+        public int[] Publishers { get; set; } = { };*/
+        public double Popularity { get; set; } = 0;
+        public Platform[] platforms { get; set; }
         public Release_dates[] Release_dates { get; set; } = { };
-        public Game_Mode[] GameModes { get; set; } = { };
-        //public Keywords[] Keyword { get; set; } = { };
-        //public Themes[] Theme { get; set; } = { };
-        public Genres[] Genre { get; set; } = { };
-        public Developers[] Developer { get; set; } = { };
-        public Publishers[] Publisher { get; set; } = { };
+        public Game_Mode[] Game_modes { get; set; } = { };
+        public Keywords[] Keywords { get; set; } = { };
+        public Themes[] Themes { get; set; } = { };
+        public Genres[] Genres { get; set; } = { };
+        public Developers[] Developers { get; set; } = { };
+        public Publishers[] Publishers { get; set; } = { };
+        public GameEngine[] Game_engines { get; set; } = { };
+        public Perspective[] Player_perspectives { get; set; } = { };
+        public int[] Games { get; set; } = { };
+        public Screenshots[] Screenshots { get; set; }
+        public Cover Cover { get; set; } = new Cover();
+        public Pegi Pegi { get; set; } = new Pegi();
     }
     public class Release_dates
     {
@@ -38,7 +45,6 @@ namespace RateAPI.Model
         public int Platform { get; set; } = 0;
         public int Region { get; set; } = 0;
         public string Human { get; set; } = "";
-        public string Platforms { get; set; } = "";
         public string Regions { get => reg[Region];}
     }
     public class Game_Mode{ public string name { get; set; } }
@@ -48,4 +54,9 @@ namespace RateAPI.Model
     public class Developers { public string name { get; set; } }
     public class Publishers { public string name { get; set; } }
     public class Platform { public string name { get; set; } }
+    public class GameEngine { public string name { get; set; } }
+    public class Perspective { public string name { get; set; } }
+    public class Screenshots { public string url { get; set; } }
+    public class Cover { public string url { get; set; } }
+    public class Pegi { public string synopsis { get; set; } public int rating { get; set; } }
 }

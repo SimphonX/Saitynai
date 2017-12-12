@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace RateMeAPI.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize]
+    
     public class FavoritesController : Controller
     {
         private readonly RateMeContext _context;
@@ -38,7 +38,7 @@ namespace RateMeAPI.Controllers
         }
 
         [HttpGet("GetFavorites")]
-        public IActionResult GetRate(long id)
+        public IActionResult GetRate(string id)
         {
             var item = _context.Followings.ToList().Where(t => t.Follower == id);
             if (item == null)
@@ -49,6 +49,7 @@ namespace RateMeAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public IActionResult Post([FromBody]Followings value)
         {
             if (value == null)
@@ -57,10 +58,11 @@ namespace RateMeAPI.Controllers
             }
             _context.Followings.Add(value);
             _context.SaveChanges();
-            return CreatedAtRoute("GetFavorite", new { id = value.Id }, value);
+            return NoContent();
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public IActionResult Put(int id, [FromBody]Followings item)
         {
             
@@ -75,9 +77,10 @@ namespace RateMeAPI.Controllers
         }
        
         [HttpDelete("{id}")]
+        [Authorize]
         public IActionResult Delete(int id)
         {
-            var comments = _context.Followings.FirstOrDefault(t => t.Id == id);
+            var comments = _context.Followings.FirstOrDefault(t => t.Game == id);
 
             if (comments == null)
             {
